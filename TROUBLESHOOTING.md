@@ -117,6 +117,61 @@ Spec does not contain matching task
 - `routes` contains all expected `screenId` values
 - `navigate` is correctly wired
 
+### Additional Debug Checklist
+
+If navigation still does not work:
+
+Check:
+
+- router.push is called
+- route exists
+- auth guard not blocking navigation
+- pending route logic is not overriding navigation
+
+Example Debug:
+
+```ts
+navoice.onResult = (result) => {
+  console.log("Navoice result:", result);
+};
+```
+
+### Verify result kind
+
+- execute → navigation should occur
+- present → modal / presentation should open
+- showChoices → choice UI should appear
+- unsupported → navigation will not occur
+
+Example:
+
+```ts
+navoice.onResult = (result) => {
+  console.log("Result kind:", result.kind);
+  console.log("Result:", result);
+};
+```
+
+### createNavoice Integration Note
+
+If you are using `createNavoice`, replacing `navoice.onResult` may override
+the built-in mic state and badge handling.
+
+To preserve SDK behavior, chain the existing handler:
+
+```ts
+const previous = navoice.onResult;
+
+navoice.onResult = (result) => {
+  previous?.(result);
+  console.log("Navoice result:", result);
+
+  if (result.kind === "execute") {
+    router.push(pathForScreen(result.screenId));
+  }
+};
+```
+
 ------------------------------------------------------------------------
 
 ## ✅ Production Validation Checklist
