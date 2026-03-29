@@ -17,15 +17,6 @@ Navoice is production-ready, license-secured, and designed for enterprise-grade 
 
 ---
 
-## Key Capabilities
-
-- Voice-driven navigation
-- Local + cloud intent routing
-- Secure license validation
-- Built-in Speech-to-Text support
-- Spec-based navigation architecture
-- Compatible with modern frameworks (Next.js, React, Vue)
-
 ## Overview
 
 Navoice Web SDK enables voice-driven navigation inside web applications.
@@ -37,6 +28,15 @@ Users can speak commands such as:
 - “Show taxes”
 
 The SDK interprets the intent and returns a navigation result defined in your application’s navigation spec.
+
+## Key Capabilities
+
+- Voice-driven navigation
+- Local + cloud intent routing
+- Secure license validation
+- Built-in Speech-to-Text support
+- Spec-based navigation architecture
+- Compatible with modern frameworks (Next.js, React, Vue)
 
 ## Architecture
 
@@ -300,6 +300,175 @@ export interface PipelineTimings {
   "say": "Sorry, I couldn't understand that request"
 }
 ```
+
+## Navigation Responsibility
+
+
+Navoice is routing-agnostic.
+
+The SDK does not assume any router implementation.
+You may use:
+
+- Next.js Router
+- React Router
+- Vue Router
+- Custom navigation logic
+
+The SDK returns a `NavoiceResult` (see **Result Model**), and the host application is responsible for:
+
+- Navigation
+- Protected route handling
+- Authentication checks
+- UI transitions
+
+When using `createNavoice`, automatic history navigation is optional and controlled by `navigationMode` (see below). Even in automatic mode, the host still owns the router function, route map, and all auth and guard logic around it.
+
+Example (host handles routing from results — map `screenId` / `presentationId` to URLs the same way as your `navigation.routes` table):
+
+```ts
+navoice.onResult = (result) => {
+  switch (result.kind) {
+    case "execute":
+      router.push(pathForScreen(result.screenId));
+      break;
+    case "present":
+      showModal(result.presentationId);
+      break;
+  }
+};
+```
+
+If you integrate via `createNavoice`, its default `onResult` also drives mic state and badges. Use `navigationMode: 'manual'` and chain that handler as shown under **Host-Controlled Navigation** so those behaviors are preserved.
+
+### Automatic Navigation vs Host-Controlled Navigation
+
+Navoice supports two navigation patterns via `createNavoice` options:
+
+#### Host-Controlled Navigation (Recommended)
+
+Set `navigationMode: 'manual'` so the SDK does not call `navigation.navigate` for `execute` / `present`. Handle each result in `navoice.onResult`. To keep built-in mic state and badge behavior from `createNavoice`, chain the handler the factory installed:
+
+```ts
+const { navoice, init } = NavoiceSDK.createNavoice({
+  /* ... */,
+  navigation: {
+    mode: "history",
+    routes: { events: "/events" /* ... */ },
+    navigate: (path) => router.push(path),
+  },
+  navigationMode: "manual",
+});
+
+const sdkOnResult = navoice.onResult;
+navoice.onResult = (result) => {
+  sdkOnResult?.(result);
+  if (result.kind === "execute") {
+    router.push(/* path from result.screenId + routes */);
+  }
+};
+```
+
+This allows:
+
+- Auth checks
+- Analytics
+- Permission handling
+- Custom transitions
+
+#### Automatic Navigation (Optional Pattern)
+
+With `navigationMode: 'auto'`, `createNavoice` wires `navoice.onResult` so that:
+
+- **execute** → resolved path from `navigation.routes` + optional query from `params`, then `navigation.navigate` or `history.pushState`
+- **present** → same, using `presentationId` as the route key
+- **showChoices** / **unsupported** → no route change (badge feedback only; choice and error UI remain the host’s responsibility)
+
+The host still supplies `navigation.routes` and `navigation.navigate`, so routing stays under app control; the SDK only applies the mapping automatically after each result.
+
+## Protected Routes Integration
+
+If navigation targets a protected route, the host app should:
+
+1. Detect protected route
+2. Store pending destination
+3. Redirect to sign-in
+4. After login, navigate to destination
+
+Example (after mapping `screenId` to a path):
+
+```ts
+navoice.onResult = (result) => {
+  if (result.kind === "execute") {
+    const path = pathForScreen(result.screenId);
+    if (!isAuthenticated()) {
+      setPendingRoute(path);
+      router.push("/signin");
+      return;
+    }
+    router.push(path);
+  }
+};
+```
+
+### Resume Navigation After Login
+
+Example pattern:
+
+```ts
+useEffect(() => {
+  const pending = getPendingRoute();
+  if (isAuthenticated() && pending) {
+    router.push(pending);
+    clearPendingRoute();
+  }
+}, [isAuthenticated]);
+```
+
+### Integration Pattern
+
+Common integration pattern:
+
+Voice → Navoice → Result → Auth Check → Navigate
+
+Architecture:
+
+```
+App UI
+│
+▼
+Navoice SDK
+│
+▼
+Result (execute / present / showChoices / unsupported)
+│
+▼
+Host App Logic
+│
+├── Auth Check
+├── Analytics
+├── Permissions
+▼
+Router Navigation
+```
+
+### Host App Responsibilities
+
+The host application is responsible for:
+
+- Routing
+- Authentication
+- Protected routes
+- Navigation animations
+- UI components
+- Modal rendering
+- Choice UI
+
+The SDK is responsible for:
+
+- Voice processing
+- Intent detection
+- Routing resolution
+- Result generation
 
 ## Licensing Model
 
