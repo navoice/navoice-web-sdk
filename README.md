@@ -29,6 +29,17 @@ Users can speak commands such as:
 
 The SDK interprets the intent and returns a navigation result defined in your application’s navigation spec.
 
+## Demo Setup
+
+This demo app is provided as a reference implementation.
+
+Voice navigation is disabled by default until you provide your own publishable key.
+
+Create a local environment variable:
+
+```env
+NEXT_PUBLIC_NAVOICE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
+
 ## Key Capabilities
 
 - Voice-driven navigation
@@ -37,6 +48,8 @@ The SDK interprets the intent and returns a navigation result defined in your ap
 - Built-in Speech-to-Text support
 - Spec-based navigation architecture
 - Compatible with modern frameworks (Next.js, React, Vue)
+
+
 
 ## Architecture
 
