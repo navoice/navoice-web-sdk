@@ -1,0 +1,322 @@
+{
+  "version": "1.0",
+  "app": {
+    "id": "mycity",
+    "default_locale": "en-US",
+    "locales": ["en-US"]
+  },
+  "routing": {
+    "weights": {
+      "keyword_phrase_hit": 6,
+      "keyword_single_hit": 3,
+      "example_token_hit": 1,
+      "example_token_cap": 10
+    },
+    "thresholds": {
+      "execute_min_score": 4.5,
+      "execute_min_conf": 0.55,
+      "choices_min_score": 4,
+      "choices_min_conf": 0.35,
+      "close_to_second_delta": 1,
+      "max_choices": 3,
+      "semantic_min_conf": 0.5,
+      "stopwordsByLocale": {
+        "en-US": [
+          "i",
+          "you",
+          "we",
+          "they",
+          "open",
+          "go",
+          "show",
+          "take",
+          "bring",
+          "give",
+          "give me",
+          "give me the",
+          "give me the id number",
+          "give me the subscriber number",
+          "give me the account number",
+          "give me the account id",
+          "give me the account id number",
+          "give me the account id number",
+          "give me the account id number",
+          "give me the account id number",
+          "give me the account id number",
+          "the",
+          "a",
+          "an",
+          "to",
+          "for",
+          "of",
+          "on",
+          "in",
+          "my",
+          "your",
+          "please",
+          "want",
+          "need",
+          "tell"
+        ]
+      }
+    },
+    "stopwords": [
+      "i",
+      "you",
+      "we",
+      "they",
+      "the",
+      "a",
+      "an",
+      "to",
+      "for",
+      "of",
+      "me",
+      "take",
+      "where",
+      "on",
+      "in",
+      "my",
+      "your",
+      "please",
+      "want",
+      "need",
+      "tell"
+    ]
+  },
+  "learning": {
+    "enabled": true,
+    "mode": "local_only",
+    "boost": {
+      "recent_choice_bonus": 1.2,
+      "repeat_choice_bonus": 1.8,
+      "max_total_bonus": 3.0
+    },
+    "telemetry": {
+      "enabled": false,
+      "endpoint": "",
+      "send_text": false
+    }
+  },
+  "stt": {
+    "enabled": true,
+    "languageByLocale": {
+      "en-US": "en"
+    },
+    "promptsByLocale": {
+      "en-US": "Transcribe clearly for a city-services voice navigation app. Keep intent words. Return one short sentence."
+    },
+    "hintsByLocale": {
+      "en-US": [
+        "MyCity",
+        "Education",
+        "Taxes",
+        "Recycle",
+        "Events",
+        "Subscriber number",
+        "subscription number",
+        "member number",
+        "school",
+        "schools",
+        "kindergarten",
+        "after school",
+        "enrollment",
+        "property tax",
+        "municipal tax",
+        "invoice",
+        "bill",
+        "payment",
+        "recycle batteries",
+        "battery",
+        "electronics",
+        "trash pickup",
+        "garbage",
+        "waste",
+        "festival",
+        "concert",
+        "tickets"
+      ]
+    },
+    "replacementsByLocale": {
+      "en-US": {
+        "texes": "taxes",
+        "recycel": "recycle",
+        "recyle": "recycle"
+      }
+    }
+  },
+  "tasks": [
+    {
+      "id": "account.id_number",
+      "title": "ID Number",
+      "screenId": "account",
+      "keywords": ["id number", "my id number", "show my id", "show me my id", "show me my id number", "what is my id", "what is my id number", "id", "my id", "identifier", "account id", "display id", "tell me my id", "get my id number", "national id", "identity number"],
+      "examples": ["show me my id number", "show my id", "what is my id number", "my id", "display my id number", "tell me my id number", "get my id", "what is my identity number", "show me my identity number"],
+      "keywordsByLocale": {
+        "en-US": ["id number", "my id number", "show my id", "show me my id", "show me my id number", "what is my id", "what is my id number", "id", "my id", "identifier", "account id", "display id", "tell me my id", "get my id number", "national id", "identity number"]
+      },
+      "examplesByLocale": {
+        "en-US": ["show me my id number", "show my id", "what is my id number", "my id", "display my id number", "tell me my id number", "get my id", "what is my identity number"]
+      },
+      "defaultParams": {},
+      "action": { "type": "present", "id": "id_number" }
+    },
+    {
+      "id": "account.subscriber_number",
+      "title": "Subscriber Number",
+      "screenId": "account",
+      "keywords": ["subscriber number", "subscription number", "member number", "show me my subscription number", "show me my subscriber number", "my subscriber number", "my subscription number", "what is my subscriber number", "display subscriber number", "customer number", "member id"],
+      "examples": ["What is my subscriber number?", "Show my subscription number", "Show me my subscription number", "Show me my subscriber number", "Tell me my member number", "Display my subscriber number", "What is my subscription number?", "Show me my member number", "Get my subscriber number"],
+      "keywordsByLocale": {
+        "en-US": ["subscriber number", "subscription number", "member number", "my subscriber number", "my subscription number", "show me my subscription number", "show me my subscriber number", "what is my subscriber number", "display subscriber number", "customer number", "member id"]
+      },
+      "examplesByLocale": {
+        "en-US": ["What is my subscriber number?", "Show my subscription number", "Show me my subscription number", "Show me my subscriber number", "Tell me my subscription number", "Display my subscriber number", "What is my subscription number?", "Show me my member number"]
+      },
+      "defaultParams": {},
+      "action": {
+        "type": "present",
+        "id": "subscriber_number"
+      }
+    },
+    {
+      "id": "education.home",
+      "title": "Education",
+      "screenId": "education",
+      "keywords": [
+        "education",
+        "schools",
+        "school",
+        "kindergarten",
+        "after school",
+        "enrollment",
+        "page",
+        "school page"
+      ],
+      "examples": [
+        "Show education services",
+        "I want to enroll my child to a school",
+        "Find after school programs"
+      ],
+      "keywordsByLocale": {
+        "en-US": [
+          "education",
+          "schools",
+          "school",
+          "kindergarten",
+          "after school",
+          "enrollment",
+          "registration",
+          "school zone",
+          "bus",
+          "tuition",
+          "page",
+          "school page"
+        ]
+      },
+      "examplesByLocale": {
+        "en-US": [
+          "Show education",
+          "Open schools page",
+          "I need after-school programs",
+          "How do I register to a school?"
+        ]
+      },
+      "defaultParams": {}
+    },
+    {
+      "id": "events.home",
+      "title": "Events",
+      "screenId": "events",
+      "keywords": [
+        "events",
+        "festival",
+        "concert",
+        "what's on",
+        "today",
+        "weekend",
+        "tickets",
+        "concert today",
+        "events today",
+        "shows today",
+        "what's on today",
+        "concerts today",
+        "event today"
+      ],
+      "examples": ["Show events", "What events are happening this weekend?", "Find concerts today"],
+      "keywordsByLocale": {
+        "en-US": [
+          "events",
+          "event",
+          "festival",
+          "concert",
+          "show",
+          "what's on",
+          "today",
+          "tomorrow",
+          "weekend",
+          "tickets",
+          "community"
+        ]
+      },
+      "examplesByLocale": {
+        "en-US": ["Show events", "What's on today?", "Show me weekend events", "Find family events"]
+      },
+      "defaultParams": {}
+    },
+    {
+      "id": "recycle.home",
+      "title": "Recycle",
+      "screenId": "recycle",
+      "keywords": ["recycle", "recycling", "trash", "garbage", "pickup", "bin", "waste", "collection"],
+      "examples": ["Show recycle", "When is trash pickup?", "Where is the nearest recycling bin?"],
+      "keywordsByLocale": {
+        "en-US": [
+          "recycle",
+          "recycling",
+          "trash",
+          "garbage",
+          "waste",
+          "pickup",
+          "collection",
+          "bin",
+          "dump",
+          "electronics",
+          "battery"
+        ]
+      },
+      "examplesByLocale": {
+        "en-US": ["Open recycle", "When is garbage pickup?", "Where can I recycle batteries?", "How do I dispose of electronics?"]
+      },
+      "defaultParams": {}
+    },
+    {
+      "id": "taxes.home",
+      "title": "Taxes",
+      "screenId": "taxes",
+      "keywords": ["taxes", "property tax", "municipal tax", "bill", "pay", "payment", "balance", "invoice"],
+      "examples": ["Show taxes", "Pay my property tax", "Check my tax balance"],
+      "keywordsByLocale": {
+        "en-US": ["taxes", "tax", "property tax", "municipal tax", "bill", "invoice", "pay", "payment", "balance", "due date", "receipt"]
+      },
+      "examplesByLocale": {
+        "en-US": ["Open taxes", "I want to pay my taxes", "Show my tax bill", "Get a payment receipt"]
+      },
+      "defaultParams": {}
+    },
+    {
+      "id": "account.home",
+      "title": "Account",
+      "screenId": "account",
+      "keywords": ["account", "my account", "open account", "go to account", "settings", "profile", "preferences", "user profile", "account settings", "open settings", "open profile"],
+      "examples": ["Open my account", "Go to account", "Show account", "Settings", "Profile", "Open settings", "Take me to my account", "Account page", "My profile"],
+      "keywordsByLocale": {
+        "en-US": ["account", "my account", "open account", "go to account", "settings", "profile", "preferences", "user profile", "account settings", "open settings", "open profile"]
+      },
+      "examplesByLocale": {
+        "en-US": ["Open my account", "Go to account", "Show account", "Settings", "Profile", "Open settings", "Take me to my account", "Account page"]
+      },
+      "defaultParams": {}
+    }
+  ]
+}

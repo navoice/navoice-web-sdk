@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary: #1d76e2;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Navoice mic button states – SDK sets data-navoice-mic-state on #navoice-mic */
+#navoice-mic[data-navoice-mic-state='idle'] .navoice-mic-idle { display: block; }
+#navoice-mic[data-navoice-mic-state='idle'] .navoice-mic-listening { display: none; }
+#navoice-mic[data-navoice-mic-state='idle'] .navoice-mic-thinking { display: none; }
+
+#navoice-mic[data-navoice-mic-state='listening'] .navoice-mic-idle { display: none; }
+#navoice-mic[data-navoice-mic-state='listening'] .navoice-mic-listening { display: block; }
+#navoice-mic[data-navoice-mic-state='listening'] .navoice-mic-thinking { display: none; }
+
+#navoice-mic[data-navoice-mic-state='thinking'] .navoice-mic-idle { display: none; }
+#navoice-mic[data-navoice-mic-state='thinking'] .navoice-mic-listening { display: none; }
+#navoice-mic[data-navoice-mic-state='thinking'] .navoice-mic-thinking { display: block; }
+
+/* Mic button background by state */
+#navoice-mic[data-navoice-mic-state='idle'] { background-color: #1d76e2; }
+#navoice-mic[data-navoice-mic-state='listening'] { background-color: #22c55e; }
+#navoice-mic[data-navoice-mic-state='thinking'] { background-color: #f59e0b; }
+
+/* Badge visibility – SDK sets data-navoice-badge */
+#navoice-badge[data-navoice-badge='success'] { background-color: #22c55e; opacity: 1; }
+#navoice-badge[data-navoice-badge='fail'] { background-color: #ef4444; opacity: 1; }
+
+/* Disabled demo – large pill above floating mic/pencil (pointer-events: none avoids blocking clicks) */
+#navoice-badge.navoice-badge--demo-disabled {
+  position: fixed;
+  top: auto;
+  left: auto;
+  bottom: 220px;
+  right: 24px;
+  max-width: 320px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.4;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  background: #334155;
+  color: #fff;
+  pointer-events: none;
+  opacity: 1;
+  width: auto;
+  height: auto;
+  white-space: normal;
+  text-align: left;
+  border: none;
+  display: block;
+}
