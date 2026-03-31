@@ -29,17 +29,39 @@ Users can speak commands such as:
 
 The SDK interprets the intent and returns a navigation result defined in your application’s navigation spec.
 
+---
+
 ## Demo Setup
 
 This demo app is provided as a reference implementation.
 
-Voice navigation is disabled by default until you provide your own publishable key.
+Voice navigation is disabled by default until you provide your own publishable key and register your domain.
 
-Create a local environment variable:
+### 1. Create a local environment file
+
+Create a local `.env.local` file:
 
 ```env
 NEXT_PUBLIC_NAVOICE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
+NEXT_PUBLIC_NAVOICE_BACKEND_BASE_URL=https://api.navoice.io
 
+You can copy from:
+cp .env.example .env.local
+
+Then restart the development server:
+npm run dev
+
+2. Register Your Domain (Required)
+To activate voice navigation, you must register your application’s URL in the Navoice Portal.
+	1.	Go to the Navoice Portal
+	2.	Open your project
+	3.	Navigate to Allowed Identifiers
+	4.	Add your application URL, for example:
+
+http://localhost:3000
+https://yourdomain.com
+
+```md
 ## Key Capabilities
 
 - Voice-driven navigation
