@@ -45,6 +45,8 @@ Create a local `.env.local` file:
 NEXT_PUBLIC_NAVOICE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
 NEXT_PUBLIC_NAVOICE_BACKEND_BASE_URL=https://api.navoice.io
 
+```
+
 You can copy from:
 cp .env.example .env.local
 
