@@ -124,40 +124,66 @@ import Script from "next/script";
 
 ## Quick Start (3 Minutes)
 
-1. Copy `navoice.min.js` into `public/`
-2. Add your spec file to `public/spec.json`
+**Step 1 — Copy SDK**
 
-    Place your spec file in /public/spec.json (or any publicly accessible URL).
+Copy `navoice.min.js` into `public/`
 
-3. Load the spec:
+⸻
 
-```ts
-const specRes = await fetch("/spec.json");
-const spec = await specRes.json();
+**Step 2 — Load SDK Script**
+
+```tsx
+import Script from "next/script";
+
+<Script src="/navoice.min.js" strategy="beforeInteractive" />
 ```
 
-4. Create the SDK:
+**Step 3 — Add Spec**
+
+Place your spec file in `/public/spec.json`
+(or any publicly accessible URL)
+
+**Step 4 — Initialize Navoice**
 
 ```ts
-const sdk = window.NavoiceSDK.createNavoice({
-  publishableKey: process.env.NEXT_PUBLIC_NAVOICE_PUBLISHABLE_KEY,
-  backendBaseUrl: process.env.NEXT_PUBLIC_NAVOICE_BACKEND_BASE_URL || "https://api.navoice.io",
-  spec,
-  mount: {
-    micButton: "#navoice-mic",
-  },
-});
+"use client";
+
+async function init() {
+  const specRes = await fetch("/spec.json");
+  const spec = await specRes.json();
+
+  if (!window.NavoiceSDK) {
+    throw new Error("Navoice SDK not loaded");
+  }
+
+  const sdk = window.NavoiceSDK.createNavoice({
+    publishableKey: process.env.NEXT_PUBLIC_NAVOICE_PUBLISHABLE_KEY,
+    backendBaseUrl:
+      process.env.NEXT_PUBLIC_NAVOICE_BACKEND_BASE_URL ||
+      "https://api.navoice.io",
+    spec,
+    mount: {
+      micButton: "#navoice-mic",
+    },
+    navigation: {
+      mode: "history",
+      routes: {},
+    },
+  });
+
+  await sdk.init();
+
+  const navoice = sdk.navoice;
+
+  navoice.onResult = (result) => {
+    if (result.kind === "execute") {
+      window.location.hash = `#/${result.screenId}`;
+    }
+  };
+}
+
+init();
 ```
-
-5. Initialize the SDK:
-
-```ts
-await sdk.init();
-
-const navoice = sdk.navoice;
-```
-
-Prerequisites: load the SDK script (**Installation**), ensure `mount` selectors match the DOM (**Required DOM Elements**), and set `publishableKey` from the Navoice Portal.
 
 ## Required Parameters
 
@@ -261,6 +287,8 @@ export async function initNavoice(navigate?: (path: string) => void) {
   const sdk = NavoiceSDK.createNavoice({
     spec,
     publishableKey,
+    backendBaseUrl:
+  process.env.NEXT_PUBLIC_NAVOICE_BACKEND_BASE_URL || "https://api.navoice.io",
     sdkVersion,
     origin,
     sttConfig: NavoiceSDK.NavoiceSTTConfig?.localOnly,
@@ -271,6 +299,7 @@ export async function initNavoice(navigate?: (path: string) => void) {
     },
     navigation: {
       mode: "history",
+      routes: {},
       navigate,
     },
   });
