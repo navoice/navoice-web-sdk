@@ -48,22 +48,31 @@ NEXT_PUBLIC_NAVOICE_BACKEND_BASE_URL=https://api.navoice.io
 ```
 
 You can copy from:
+
+```bash
 cp .env.example .env.local
+```
 
 Then restart the development server:
+
+```bash
 npm run dev
+```
 
-2. Register Your Domain (Required)
+### 2. Register Your Domain (Required)
+
 To activate voice navigation, you must register your application’s URL in the Navoice Portal.
-	1.	Go to the Navoice Portal
-	2.	Open your project
-	3.	Navigate to Allowed Identifiers
-	4.	Add your application URL, for example:
 
+1. Go to the Navoice Portal
+2. Open your project
+3. Navigate to Allowed Identifiers
+4. Add your application URL, for example:
+
+```
 http://localhost:3000
 https://yourdomain.com
+```
 
-```md
 ## Key Capabilities
 
 - Voice-driven navigation
@@ -73,26 +82,24 @@ https://yourdomain.com
 - Spec-based navigation architecture
 - Compatible with modern frameworks (Next.js, React, Vue)
 
-
-
 ## Architecture
 
-```
+```text
 Browser (Web App)
-        │
-        │ POST /api/license/validate
-        ▼
+│
+│ POST /api/license/validate
+▼
 Navoice Backend (License Validation)
-        │
-        │ JWT License Token
-        ▼
+│
+│ JWT License Token
+▼
 Browser (SDK Active)
-        │
-        │ POST /api/interpret
-        ▼
+│
+│ POST /api/interpret
+▼
 Navoice Backend (Intent Routing)
-        │
-        ▼
+│
+▼
 Navigation Result → Client Router
 
 Optional flow:
@@ -567,7 +574,7 @@ Voice → Navoice → Result → Auth Check → Navigate
 
 Architecture:
 
-```
+```text
 App UI
 │
 ▼
