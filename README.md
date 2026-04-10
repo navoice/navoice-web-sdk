@@ -121,10 +121,82 @@ import Script from "next/script";
 2. Add your publishable key in environment variables (e.g. `NEXT_PUBLIC_NAVOICE_PUBLISHABLE_KEY`)
 3. Add your spec file to `public/spec.json`
 4. Load the SDK script in your app layout (see **Installation**)
-5. Initialize the SDK via `window.NavoiceSDK.createNavoice(...)`
-6. Call `await sdk.init()` and start voice navigation (e.g. mic button wired to `startVoice` / `stopVoice` via `createNavoice` mount options)
+5. Create and configure the SDK:
+
+```ts
+const sdk = window.NavoiceSDK.createNavoice({
+  /* spec, publishableKey, mount, navigation, … */
+});
+await sdk.init();
+```
+
+6. Ensure the DOM elements referenced in `mount` exist (see **Required DOM Elements**).
 
 The publishable key is generated in the Navoice Portal when you create a project.
+
+**What `createNavoice` + `init` do for you**
+
+- **Mic binding:** If you pass `mount.micButton`, `init()` attaches the click handler that starts and stops voice capture. You do not need to wire `startVoice` / `stopVoice` yourself for that button.
+- **Navigation:** With the default `navigationMode: 'auto'`, the SDK calls your `navigation.navigate` (or `history.pushState`) after **execute** and **present** results when routes are defined. Use `navigationMode: 'manual'` if the host should navigate only from its own `onResult` logic (see **Navigation Responsibility**).
+
+## Built-in Microphone State and Automatic Navigation
+
+`createNavoice` is the high-level integration path: it constructs a `Navoice` client, **binds the mic control** from `mount.micButton` during `init()`, and installs a default **`navoice.onResult`** handler that updates **mic state**, **badge** feedback, and (unless you opt out) **automatic navigation**.
+
+- **Mic:** The SDK owns the listening lifecycle for the mounted control—state transitions and calls to `startVoice` / `stopVoice` on user interaction.
+- **Results:** The factory’s `onResult` resets the mic, updates the badge when configured, and optionally navigates based on `navigationMode`.
+
+### Mic listening states
+
+The SDK tracks three states and mirrors them on the mic element as **`data-navoice-mic-state`**:
+
+| State | Meaning |
+| ----- | ------- |
+| `idle` | Ready; user can start a session. |
+| `listening` | Recording; user can stop and send audio for processing. |
+| `thinking` | Waiting for STT / interpret / result; clicks are ignored until a result arrives. |
+
+Example markup (the attribute is set and updated by the SDK):
+
+```html
+<button id="navoice-mic" type="button" data-navoice-mic-state="idle"></button>
+```
+
+**Transitions (click on the mounted mic element)**
+
+- **`idle` → `listening`** — SDK calls `startVoice()`.
+- **`listening` → `thinking`** — SDK calls `stopVoice()` to finalize capture and run the pipeline.
+- **`thinking` → `idle`** — When a `NavoiceResult` is delivered, the factory’s `onResult` handler sets the mic back to `idle` (no click in this phase).
+
+While in **`thinking`**, additional clicks do nothing until the result callback runs.
+
+## Required DOM Elements
+
+Provide elements in the DOM that match the selectors you pass in `createNavoice`’s `mount` option. Typical IDs:
+
+```html
+<button id="navoice-mic" type="button"></button>
+<span id="navoice-badge"></span>
+<div id="navoice-license-banner"></div>
+```
+
+Mount options:
+
+```ts
+mount: {
+  micButton: "#navoice-mic",
+  badge: "#navoice-badge",
+  licenseBanner: "#navoice-license-banner",
+},
+```
+
+| Element | Selector option | Role |
+| ------- | --------------- | ---- |
+| Mic button | `micButton` (**required** in `mount`) | Voice toggle: the SDK binds click handling in `init()` and updates `data-navoice-mic-state`. |
+| Badge | `badge` (optional) | Short success/failure feedback via `data-navoice-badge` (`success` / `fail`) after each result. |
+| License banner | `licenseBanner` (optional) | Shown when web license validation fails (e.g. inactive license or disallowed domain); hidden when validation succeeds or when using local-only STT where validation is skipped in `init`. |
+
+You may use different IDs as long as the CSS selectors in `mount` match your markup.
 
 ## Basic Integration (Next.js Example)
 
@@ -414,13 +486,39 @@ This allows:
 
 #### Automatic Navigation (Optional Pattern)
 
-With `navigationMode: 'auto'`, `createNavoice` wires `navoice.onResult` so that:
+`navigationMode` defaults to **`'auto'`**. In that mode, `createNavoice` assigns `navoice.onResult` so that after every result the mic returns to **`idle`**, the badge updates when `mount.badge` is set, and navigation runs only for the cases below (implementation matches `createNavoice.ts`).
 
-- **execute** → resolved path from `navigation.routes` + optional query from `params`, then `navigation.navigate` or `history.pushState`
-- **present** → same, using `presentationId` as the route key
-- **showChoices** / **unsupported** → no route change (badge feedback only; choice and error UI remain the host’s responsibility)
+When **`navigationMode: 'auto'`**, the SDK **automatically**:
 
-The host still supplies `navigation.routes` and `navigation.navigate`, so routing stays under app control; the SDK only applies the mapping automatically after each result.
+- **Navigates on `execute`** — resolves a path from `navigation.routes` using `screenId` and optional query string from `params`, then calls `navigation.navigate` or `history.pushState`.
+- **Navigates on `present`** — same pattern using `presentationId` as the route key.
+- **Does not navigate on `showChoices`** — shows badge feedback only; disambiguation UI stays with the host.
+- **Does not navigate on `unsupported`** — shows badge feedback only.
+
+The host still supplies `navigation.routes` and `navigation.navigate` (or relies on `history` when `navigate` is omitted), so the route table and URL shape remain app-defined; the SDK only applies the mapping automatically after each result.
+
+With **`navigationMode: 'manual'`**, that same `onResult` still updates mic state and badges, but it **does not** call `navigateTo` for **`execute`** or **`present`**—the host must perform navigation (or other UI) in a chained handler (see above).
+
+## SDK vs Host Responsibilities
+
+**The SDK (`createNavoice` + `Navoice`) typically handles**
+
+- Voice capture and the mic button binding (when `mount.micButton` is used)
+- Speech-to-text (per your `sttConfig`) and interpretation against the spec
+- Intent routing and emitting `NavoiceResult` values
+- Mic listening state (`data-navoice-mic-state`) on the mounted control
+- Badge feedback when `mount.badge` is configured
+- Optional **automatic** navigation for **`execute`** / **`present`** when `navigationMode: 'auto'`
+
+**The host application typically handles**
+
+- Supplying the router function and route map (`navigation.navigate`, `navigation.routes`)
+- Authentication, authorization, and protected-route policy
+- UI transitions, layout, and any navigation the SDK does not perform (e.g. after **`showChoices`** or **`unsupported`**)
+- Modals, sheets, or inline UI for **`present`** when you do not map `presentationId` to a URL—or when using **`manual`** mode for full control
+- Choice pickers or follow-up flows for **`showChoices`**
+
+Lower-level use of `Navoice` without `createNavoice` is still possible: the host then wires the mic, badges, license UI, and all navigation itself.
 
 ## Protected Routes Integration
 
@@ -489,6 +587,8 @@ Router Navigation
 ```
 
 ### Host App Responsibilities
+
+For a concise split between factory defaults and app-owned behavior, see **SDK vs Host Responsibilities**.
 
 The host application is responsible for:
 
@@ -619,8 +719,8 @@ Before shipping your application with Navoice, verify the following:
 - The SDK script is loaded in the application shell before initialization
 - `NEXT_PUBLIC_NAVOICE_PUBLISHABLE_KEY` (or equivalent) is configured
 - Navigation spec is available (e.g. `/public/spec.json`)
-- The SDK is initialized with `NavoiceSDK.createNavoice(...)` and `await sdk.init()`
-- Voice trigger UI is connected (mic button or custom trigger via `createNavoice` `mount` options)
-- `onResult` / navigation handling is wired for routing results
+- The SDK is initialized with `const sdk = window.NavoiceSDK.createNavoice(...)` and `await sdk.init()`
+- `mount.micButton` points at a real DOM node so `init()` can bind the mic automatically (or you use a custom trigger and call `navoice.startVoice` / `stopVoice` yourself)
+- For **`navigationMode: 'manual'`** (or custom `Navoice` usage), `onResult` / navigation handling is wired for routing results; for **`'auto'`**, ensure `navigation.routes` covers your `screenId` / `presentationId` values
 
 When these items are in place, your application is ready to use Navoice voice navigation.
