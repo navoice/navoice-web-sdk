@@ -125,26 +125,57 @@ import Script from "next/script";
 ## Quick Start (3 Minutes)
 
 1. Copy `navoice.min.js` into `public/`
-2. Add your publishable key in environment variables (e.g. `NEXT_PUBLIC_NAVOICE_PUBLISHABLE_KEY`)
-3. Add your spec file to `public/spec.json`
-4. Load the SDK script in your app layout (see **Installation**)
-5. Create and configure the SDK:
+2. Add your spec file to `public/spec.json`
+
+    Place your spec file in /public/spec.json (or any publicly accessible URL).
+
+3. Load the spec:
+
+```ts
+const specRes = await fetch("/spec.json");
+const spec = await specRes.json();
+```
+
+4. Create the SDK:
 
 ```ts
 const sdk = window.NavoiceSDK.createNavoice({
-  /* spec, publishableKey, mount, navigation, … */
+  publishableKey: process.env.NEXT_PUBLIC_NAVOICE_PUBLISHABLE_KEY,
+  backendBaseUrl: process.env.NEXT_PUBLIC_NAVOICE_BACKEND_BASE_URL || "https://api.navoice.io",
+  spec,
+  mount: {
+    micButton: "#navoice-mic",
+  },
 });
-await sdk.init();
 ```
 
-6. Ensure the DOM elements referenced in `mount` exist (see **Required DOM Elements**).
+5. Initialize the SDK:
 
-The publishable key is generated in the Navoice Portal when you create a project.
+```ts
+await sdk.init();
 
-**What `createNavoice` + `init` do for you**
+const navoice = sdk.navoice;
+```
 
-- **Mic binding:** If you pass `mount.micButton`, `init()` attaches the click handler that starts and stops voice capture. You do not need to wire `startVoice` / `stopVoice` yourself for that button.
-- **Navigation:** With the default `navigationMode: 'auto'`, the SDK calls your `navigation.navigate` (or `history.pushState`) after **execute** and **present** results when routes are defined. Use `navigationMode: 'manual'` if the host should navigate only from its own `onResult` logic (see **Navigation Responsibility**).
+Prerequisites: load the SDK script (**Installation**), ensure `mount` selectors match the DOM (**Required DOM Elements**), and set `publishableKey` from the Navoice Portal.
+
+## Required Parameters
+
+The following parameters are required for proper SDK operation:
+
+- **publishableKey** — Your project publishable key
+- **backendBaseUrl** — Navoice backend URL
+- **spec** — Navigation spec JSON
+
+Example:
+
+```ts
+const sdk = window.NavoiceSDK.createNavoice({
+  publishableKey,
+  backendBaseUrl: "https://api.navoice.io",
+  spec,
+});
+```
 
 ## Built-in Microphone State and Automatic Navigation
 
@@ -724,9 +755,10 @@ Before shipping your application with Navoice, verify the following:
 
 - `navoice.min.js` is in your public/static assets folder (e.g. `/public/navoice.min.js`)
 - The SDK script is loaded in the application shell before initialization
-- `NEXT_PUBLIC_NAVOICE_PUBLISHABLE_KEY` (or equivalent) is configured
-- Navigation spec is available (e.g. `/public/spec.json`)
-- The SDK is initialized with `const sdk = window.NavoiceSDK.createNavoice(...)` and `await sdk.init()`
+- `publishableKey` is configured (e.g. `NEXT_PUBLIC_NAVOICE_PUBLISHABLE_KEY`)
+- `backendBaseUrl` is configured
+- `spec` is loaded manually using `fetch` (or equivalent) before `createNavoice`
+- `await sdk.init()` completes before you use `sdk.navoice` or rely on mic binding
 - `mount.micButton` points at a real DOM node so `init()` can bind the mic automatically (or you use a custom trigger and call `navoice.startVoice` / `stopVoice` yourself)
 - For **`navigationMode: 'manual'`** (or custom `Navoice` usage), `onResult` / navigation handling is wired for routing results; for **`'auto'`**, ensure `navigation.routes` covers your `screenId` / `presentationId` values
 
