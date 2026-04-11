@@ -221,7 +221,7 @@ export default function NavoiceInit() {
 
       const navoice = sdk.navoice;
       const sdkOnResult = navoice.onResult;
-
+      // Example route mapping — replace with your own screen IDs
       navoice.onResult = (result: any) => {
         sdkOnResult?.(result);
 
