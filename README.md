@@ -255,6 +255,48 @@ export default function NavoiceInit() {
 
 Optional: handle `present`, `showChoices`, and `unsupported` in the same callback after `sdkOnResult?.(result)`.
 
+### Semantic Catalog Runtime Flow
+
+When Semantic Catalog is enabled, runtime routing follows this order:
+
+`local/spec routing -> semantic task resolver -> semantic catalog resolve -> cloud interpret`
+
+Semantic Catalog lets customer apps route natural-language queries to dynamic catalog items such as movies, products, services, and similar entities. The SDK still returns a standard Navoice result (`kind`, `screenId`, `params`). Your app owns the final navigation behavior and must map that `screenId` + `params` to your own UI routes.
+Set the SDK `locale` to match the primary language of your users and catalog content, for example `locale: "he-IL"` for Hebrew catalogs.
+
+Example result handling in `navoice.onResult`:
+
+```tsx
+if (result.kind === "execute" && result.screenId === "catalogItemDetails") {
+  const itemId = result.params?.itemId;
+  router.push(`/catalog/${itemId}`);
+}
+```
+
+#### Required backend / portal setup
+
+- In the Navoice Portal, connect your catalog URL for the project.
+- The backend then scans the catalog, detects entity types, applies mapping, syncs items, and creates embeddings.
+- Only the latest saved catalog is active per project.
+- Standard SDK requirements still apply: use a valid `publishableKey` and register your web origin under **Allowed Identifiers**.
+
+#### Screen ID ownership and defaults
+
+`catalogItemDetails` is the default generated `screenId` for catalog-item details, but screen names are app-owned. You can map it to any domain-specific UI route, for example product details, movie details, or service details.
+
+Short example:
+
+- User says: `"Find Fauda"`
+- SDK result:
+
+```json
+{
+  "kind": "execute",
+  "screenId": "catalogItemDetails",
+  "params": { "itemId": "..." }
+}
+```
+
 ⸻
 
 ## Listening State
