@@ -79,6 +79,9 @@ export default function NavoiceInit() {
           process.env.NEXT_PUBLIC_NAVOICE_BACKEND_BASE_URL ||
           "https://api.navoice.io",
         spec,
+          sttConfig: {
+    mode: "cloudOnly",
+  },
         mount: {
           micButton: "#navoice-mic",
           badge: "#navoice-badge",
@@ -206,6 +209,9 @@ export default function NavoiceInit() {
           process.env.NEXT_PUBLIC_NAVOICE_BACKEND_BASE_URL ||
           "https://api.navoice.io",
         spec,
+        sttConfig: {
+    mode: "cloudOnly",
+  },
         mount: {
           micButton: "#navoice-mic",
           badge: "#navoice-badge",
@@ -365,7 +371,17 @@ navoice.onResult = (result: any) => {
 
 ## Speech-to-text (STT)
 
-STT is configured via the SDK / backend (e.g. `sttConfig` on `createNavoice` when your bundle exposes it). Backend must expose `/api/stt` as documented for your deployment. Not required for the minimal install above if you rely on defaults.
+The Web SDK uses browser microphone recording via `MediaRecorder` and sends the recorded audio to Navoice Cloud STT through the backend `/api/stt` endpoint.
+
+The SDK does not rely on the browser Web Speech API (`SpeechRecognition` / `webkitSpeechRecognition`). This provides more consistent behavior across Chrome, Safari, and other modern browsers.
+
+Requirements:
+
+- Microphone permission from the user
+- HTTPS in production
+- A valid Navoice `publishableKey`
+- A registered web origin under **Allowed Identifiers**
+- Backend `/api/stt` available for the configured backend URL
 
 ⸻
 
@@ -380,7 +396,7 @@ STT is configured via the SDK / backend (e.g. `sttConfig` on `createNavoice` whe
 - [ ] `mount` in `createNavoice` matches those selectors
 - [ ] `await sdk.init()` completes before using `navoice`
 - [ ] `navoice.onResult` always calls `sdkOnResult?.(result)` first, then your routing (replace Quick Start `hash` with App Router `router.push` or equivalent before release)
-- [ ] Verify console shows `[NAVOICE] mic clicked` logs during testing
+- [ ] Verify the browser Network tab shows a request to `/api/stt` after stopping the microphone
 
 ⸻
 
