@@ -303,6 +303,79 @@ Short example:
 }
 ```
 
+#### Semantic Catalog Result Structure
+
+Catalog search results may now include a `params.display` object containing human-readable fields extracted from your catalog data:
+
+```json
+{
+  "kind": "execute",
+  "screenId": "catalogItemDetails",
+  "params": {
+    "itemId": "TITL0000000000000027",
+    "display": {
+      "title": "The Shawshank Redemption",
+      "actors": [
+        "Tim Robbins",
+        "Morgan Freeman"
+      ],
+      "image": "https://...",
+      "description": "Two imprisoned men bond over a number of years..."
+    }
+  }
+}
+```
+
+#### Generic Display Fields
+
+Define `displayFields` in your Semantic Catalog mapping to control which fields appear in `params.display`:
+
+```json
+"displayFields": {
+  "title": "title",
+  "actors": "credits.actors",
+  "image": "media[].url",
+  "description": "synopsis"
+}
+```
+
+These fields are extracted dynamically from `semantic_items.raw` and returned in `params.display` at query time. This mechanism is fully generic and works for any catalog domain:
+
+- Movies and TV series
+- Products and e-commerce catalogs
+- Restaurants
+- Documents
+- Real estate listings
+- Medical providers (e.g. dentists, doctors)
+- Any custom JSON catalog
+
+#### Client Rendering Recommendations
+
+Use the following fallback order when choosing a human-readable label:
+
+1. `params.display.title`
+2. `params.display.name`
+3. `params.display.label`
+4. `params.itemId`
+
+This covers common catalog domains: movies use `title`, products use `name`, generic items use `label`, with `itemId` as the final fallback.
+
+```tsx
+const display = result.params?.display;
+const label =
+  display?.title ||
+  display?.name ||
+  display?.label ||
+  result.params?.itemId;
+```
+
+#### Backward Compatibility
+
+- `params.itemId` remains unchanged — existing integrations continue to work without modification.
+- `params.display` is optional and additive; applications may ignore it if richer presentation is not needed.
+- No database migration, catalog re-save, or catalog re-sync is required.
+- Existing `semantic_items.raw` data is used to populate display fields dynamically at query time.
+
 ⸻
 
 ## Listening State
