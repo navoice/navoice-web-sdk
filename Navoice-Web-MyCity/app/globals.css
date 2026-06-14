@@ -45,29 +45,3 @@ body {
 /* Badge visibility – SDK sets data-navoice-badge */
 #navoice-badge[data-navoice-badge='success'] { background-color: #22c55e; opacity: 1; }
 #navoice-badge[data-navoice-badge='fail'] { background-color: #ef4444; opacity: 1; }
-
-/* Disabled demo – large pill above floating mic/pencil (pointer-events: none avoids blocking clicks) */
-#navoice-badge.navoice-badge--demo-disabled {
-  position: fixed;
-  top: auto;
-  left: auto;
-  bottom: 220px;
-  right: 24px;
-  max-width: 320px;
-  padding: 14px 16px;
-  font-size: 14px;
-  line-height: 1.4;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  z-index: 9999;
-  background: #334155;
-  color: #fff;
-  pointer-events: none;
-  opacity: 1;
-  width: auto;
-  height: auto;
-  white-space: normal;
-  text-align: left;
-  border: none;
-  display: block;
-}

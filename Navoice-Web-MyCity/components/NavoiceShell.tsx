@@ -2,12 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  getNavoiceDisabledMessage,
-  initNavoice,
-  isNavoiceDisabled,
-  routeNavoiceText,
-} from '@/app/navoiceInit';
+import { initNavoice, routeNavoiceText } from '@/app/navoiceInit';
 
 /** Derive modal title and body from present payload (app-only content rules) */
 function presentModalContent(presentationId: string, say?: string): { title: string; body: string } {
@@ -25,7 +20,6 @@ export function NavoiceShell() {
   const [params, setParams] = useState<Record<string, string>>({});
   const [say, setSay] = useState<string | undefined>(undefined);
   const [configError, setConfigError] = useState<string | null>(null);
-  const isDisabled = !!configError;
   // ✅ Text panel state (pencil + input + send)
   const [textPanelOpen, setTextPanelOpen] = useState(false);
   const [textValue, setTextValue] = useState('');
@@ -38,22 +32,25 @@ export function NavoiceShell() {
   };
 
   useEffect(() => {
-    if (initDone.current) return;
-    initDone.current = true;
-
-initNavoice({
-  navigate: (path: string) => router.push(path),
-  onPresent: (p) => openModal(p),
-}).catch((e: any) => {
-  console.error(e);
-
-  if (isNavoiceDisabled()) {
-    setConfigError(getNavoiceDisabledMessage());
-    return;
-  }
-
-  setConfigError("Domain not registered. Add it in Navoice Portal.");
-});
+    const start = async () => {
+      if (document.readyState !== "complete") {
+        await new Promise((resolve) => {
+          window.addEventListener("load", resolve, { once: true });
+        });
+      }
+  
+      try {
+        await initNavoice({
+          navigate: (path: string) => router.push(path),
+          onPresent: (p) => openModal(p),
+        });
+      } catch (e: any) {
+        console.error(e);
+        setConfigError("Domain not registered. Add it in Navoice Portal.");
+      }
+    };
+  
+    start();
   }, [router]);
 
   const closeModal = () => {
@@ -159,11 +156,6 @@ initNavoice({
             className="w-16 h-16 bg-primary text-white rounded-full shadow-xl shadow-blue-500/30 flex items-center justify-center hover:scale-110 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
             data-navoice-mic-state="idle"
             aria-label="Tap to start listening"
-            onClick={() => {
-              if (isNavoiceDisabled()) {
-                alert(getNavoiceDisabledMessage());
-              }
-            }}
           >
             <MicIcon />
           </button>
@@ -184,10 +176,6 @@ initNavoice({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (isNavoiceDisabled()) {
-              alert(getNavoiceDisabledMessage());
-              return;
-            }
             setTextPanelOpen((v) => !v);
           }}
         >

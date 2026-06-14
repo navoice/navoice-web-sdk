@@ -8,22 +8,46 @@ const DEBUG = process.env.NEXT_PUBLIC_NAVOICE_DEBUG === "1";
 
 let __sdk: any;
 let __defaultLocale: string = "en-US";
-let __navoiceDisabled = false;
-let __navoiceDisabledMessage = "";
-
-export function isNavoiceDisabled(): boolean {
-  return __navoiceDisabled;
-}
-
-export function getNavoiceDisabledMessage(): string {
-  return __navoiceDisabledMessage;
-}
 
 export interface InitNavoiceParams {
   /** Next.js router.push for navigation (client-side) */
   navigate?: (path: string) => void;
   /** Called when result.kind === "present"; host shows modal, no navigation */
   onPresent?: (payload: { presentationId: string; params: Record<string, string>; say?: string }) => void;
+}
+
+function loadScript(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (typeof window === "undefined") {
+      reject(new Error("Navoice SDK failed to load"));
+      return;
+    }
+    const w = window as unknown as { NavoiceSDK?: { createNavoice?: unknown } };
+    if (typeof w.NavoiceSDK?.createNavoice === "function") {
+      resolve();
+      return;
+    }
+
+    const existing = document.querySelector(`script[src="${src}"]`);
+    if (existing) {
+      existing.remove();
+    }
+
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = true;
+    script.onload = () => {
+      const g = window as unknown as { NavoiceSDK?: { createNavoice?: unknown } };
+      if (typeof g.NavoiceSDK?.createNavoice === "function") {
+        resolve();
+      } else {
+        reject(new Error("Navoice SDK failed to load"));
+      }
+    };
+    script.onerror = () => reject(new Error("Navoice SDK failed to load"));
+
+    document.head.appendChild(script);
+  });
 }
 
 /** Options for routeNavoiceText (e.g. locale override). */
@@ -40,10 +64,6 @@ export async function routeNavoiceText(
   text: string,
   options?: RouteNavoiceTextOptions
 ): Promise<void> {
-  if (__navoiceDisabled) {
-    alert(__navoiceDisabledMessage);
-    return;
-  }
   const trimmed = (text ?? "").trim();
   if (!trimmed) return;
 
@@ -72,37 +92,43 @@ declare global {
   interface Window {
     __navoiceSdk?: any;
     __navoiceDefaultLocale?: string;
+    __navoiceInitialized?: boolean;
+    __navoiceInitPromise?: Promise<void>;
   }
 }
 
-export async function initNavoice(params?: InitNavoiceParams): Promise<void> {
-  // ✅ Support both names (some code/SDK versions used PUBLISHABLE_KEY)
+export async function initNavoice(params?: InitNavoiceParams, skipGuard = false): Promise<void> {
+  if (typeof window !== "undefined" && !skipGuard) {
+    if ((window as any).__navoiceInitialized) return;
+    if ((window as any).__navoiceInitPromise) {
+      await (window as any).__navoiceInitPromise;
+      return;
+    }
+
+    (window as any).__navoiceInitPromise = (async () => {
+      if (!(window as any).NavoiceSDK) {
+        await loadScript("/navoice.min.js");
+      }
+      if (!(window as any).NavoiceSDK?.createNavoice) {
+        throw new Error("Navoice SDK failed to load");
+      }
+      await initNavoice(params, true);
+      (window as any).__navoiceInitialized = true;
+    })();
+
+    try {
+      await (window as any).__navoiceInitPromise;
+    } catch (e) {
+      (window as any).__navoiceInitialized = false;
+      throw e;
+    } finally {
+      (window as any).__navoiceInitPromise = undefined;
+    }
+    return;
+  }
   const publishableKey =
     (process.env.NEXT_PUBLIC_NAVOICE_PUBLISHABLE_KEY ||
       "").trim();
-
-  const isPortalDemo = process.env.NEXT_PUBLIC_NAVOICE_PORTAL_DEMO === "true";
-
-  if (!publishableKey && !isPortalDemo) {
-    __navoiceDisabled = true;
-    __navoiceDisabledMessage =
-      "Navoice Demo — Insert publishable key to enable voice navigation";
-
-    console.warn("[NAVOICE] SDK disabled — no publishable key");
-
-    if (typeof document !== "undefined") {
-      const badge = document.getElementById("navoice-badge");
-      if (badge) {
-        badge.classList.add("navoice-badge--demo-disabled");
-        badge.innerHTML = __navoiceDisabledMessage;
-      }
-    }
-
-    return;
-  }
-
-  __navoiceDisabled = false;
-  __navoiceDisabledMessage = "";
 
   const backendBaseUrl =
     (process.env.NEXT_PUBLIC_NAVOICE_BACKEND_BASE_URL || "").trim() ||
@@ -154,13 +180,21 @@ export async function initNavoice(params?: InitNavoiceParams): Promise<void> {
     taxes: "/taxes",
   };
 
-  const sdk = NavoiceSDK.createNavoice({
+  // ✅ Keep previous behavior: if missing key, still init with demo-placeholder
+  if (!publishableKey) {
+    console.warn(
+      "[NAVOICE] Missing env var: NEXT_PUBLIC_NAVOICE_PUBLISHABLE_KEY. Using demo-placeholder."
+    );
+  }
+
+  const sdkApi = typeof window !== "undefined" ? (window as any).NavoiceSDK : NavoiceSDK;
+  const sdk = sdkApi.createNavoice({
     spec,
-    publishableKey,
+    publishableKey: publishableKey || "demo-placeholder",
     backendBaseUrl,
     sdkVersion,
     origin,
-    sttConfig: NavoiceSDK.NavoiceSTTConfig.cloudOnly,
+    sttConfig: sdkApi.NavoiceSTTConfig.cloudOnly,
     debug: DEBUG,
     mount: {
       micButton: "#navoice-mic",
@@ -327,10 +361,6 @@ export async function initNavoice(params?: InitNavoiceParams): Promise<void> {
       btn.addEventListener(
         "click",
         (event) => {
-          if (__navoiceDisabled) {
-            alert(__navoiceDisabledMessage);
-            return;
-          }
           event.preventDefault();
           event.stopImmediatePropagation();
           if (!isRecording) {

@@ -1,0 +1,41 @@
+{
+  "name": "@navoice/web",
+  "version": "0.1.0",
+  "description": "Voice-driven navigation SDK for web apps. Same API as Navoice iOS SDK.",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "prepublishOnly": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build:prod": "node build.js"
+  },
+  "keywords": [
+    "navoice",
+    "voice",
+    "navigation",
+    "speech",
+    "stt",
+    "nlu"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "esbuild": "^0.27.4",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^2.0.0"
+  }
+}

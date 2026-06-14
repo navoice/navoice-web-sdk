@@ -41,7 +41,6 @@ export default function EducationPage() {
               </div>
               <h4 className="font-bold text-lg mb-2">School Registration</h4>
               <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 flex-grow">Enroll your child in local public schools for the upcoming term.</p>
-              <button className="w-full bg-primary text-white font-semibold py-3 rounded-2xl hover:bg-blue-700 transition-colors">Enroll Now</button>
             </div>
             <div className="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col h-full">
               <div className="flex justify-between items-start mb-4">
@@ -56,7 +55,6 @@ export default function EducationPage() {
               </div>
               <h4 className="font-bold text-lg mb-2">Library Services</h4>
               <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 flex-grow">Access digital catalogs, book rentals, and community study spaces.</p>
-              <button className="w-full bg-blue-50 dark:bg-slate-700 text-primary dark:text-blue-400 font-semibold py-3 rounded-2xl hover:bg-blue-100 dark:hover:bg-slate-600 transition-colors">Find Library</button>
             </div>
             <div className="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col h-full">
               <div className="flex justify-between items-start mb-4">
@@ -71,7 +69,6 @@ export default function EducationPage() {
               </div>
               <h4 className="font-bold text-lg mb-2">Adult Learning</h4>
               <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 flex-grow">Skill development, vocational training, and night classes for adults.</p>
-              <button className="w-full bg-blue-50 dark:bg-slate-700 text-primary dark:text-blue-400 font-semibold py-3 rounded-2xl hover:bg-blue-100 dark:hover:bg-slate-600 transition-colors">View Courses</button>
             </div>
           </div>
         </section>
